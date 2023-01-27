@@ -12,8 +12,6 @@ const args = () => ({ a: randInt(0, 40), b: randInt(0, 40) })
 const generateTasks = (i) =>
   new Array(i).fill(1).map((_) => ({ type: taskType(), args: args() }))
   let workers = [
-    { url: 'http://worker:8080', id: '0' },
-    { url: 'http://worker1:8081', id: '1' },
  ]
 
 const app = express()
@@ -29,9 +27,9 @@ app.get('/', (req, res) => {
 })
 
 app.post('/register', (req, res) => {
-  const { url, id } = req.body
+  const { url, id, add, mul } = req.body
   console.log(`Register: adding ${url} worker: ${id}`)
-  workers.push({ url, id })
+  workers.push({ url, id, add, mul })
   res.send('ok')
 })
 
@@ -45,6 +43,26 @@ const sendTask = async (worker, task) => {
   console.log(`=> ${worker.url}/${task.type}`, task)
   workers = workers.filter((w) => w.id !== worker.id)
   tasks = tasks.filter((t) => t !== task)
+
+  console.log(`${worker.url}/${task.type}`)
+  switch (task.type){
+    case 'mult':
+      if (worker.mult != true){
+        workers = [...workers, worker]
+        tasks = [...tasks, task]
+
+        return
+      }
+      break
+    case 'add':
+      if (worker.add != true){
+        workers = [...workers, worker]
+        tasks = [...tasks, task]
+
+        return
+      }
+      break
+  }
   const request = fetch(`${worker.url}/${task.type}`, {
     method: 'POST',
     headers: {
