@@ -16,7 +16,7 @@ const port = process.env.PORT || 8080
 const ADDRESS =
   process.env.ADDRESS !== undefined
     ? process.env.ADDRESS
-    : 'http://localhost:' + port
+    : 'localhost' + port
 const randInt = (min, max) => Math.floor(Math.random() * (max - min)) + min
 const register = () =>
   fetch(PLANNER + '/register', {
@@ -25,7 +25,7 @@ const register = () =>
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ url: ADDRESS, id }),
+    body: JSON.stringify({ url: 'worker', id, mult:process.env.MULT }),
   })
 let mult = false
 let add = false
@@ -45,14 +45,16 @@ if (MULT)
       return
     }
     mult = true
-    const { a, b } = req.body
-    task = { a, b }
+    const { a, b, isOdd } = req.body
+    task = { a, b, isOdd }
     console.log('mult', req.body)
-    const duration = randInt(3000, 12000)
-    setTimeout(() => {
-      mult = false
-      res.send(JSON.stringify({ res: a * b, duration, id }))
-    }, duration)
+    if(isOdd) {
+      const duration = randInt(3000, 12000)
+      setTimeout(() => {
+        mult = false
+        res.send(JSON.stringify({res: a * b, duration, id}))
+      }, duration)
+    }
   })
 
 if (ADD)
@@ -63,14 +65,16 @@ if (ADD)
       return
     }
     add = true
-    const { a, b } = req.body
-    task = { a, b }
+    const { a, b, isOdd } = req.body
+    task = { a, b, isOdd }
     console.log('add', req.body)
     const duration = randInt(3000, 7000)
+    if(!isOdd){
     setTimeout(() => {
       add = false
       res.send(JSON.stringify({ res: a + b, duration, id }))
     }, duration)
+  }
   })
 
 app.get('/', (req, res) => {
